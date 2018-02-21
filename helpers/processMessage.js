@@ -6,6 +6,8 @@ const moment = require('moment');
 
 const fireDB = require('./../controllers/firebaseController');
 
+var resultFromDialogflow = '';
+
 const sendBotIsTyping = (senderId, type) => {
     return new Promise((resolve, reject) => {
         request({
@@ -84,36 +86,124 @@ const sendQuickReplie = (senderId, text) => {
     });
 }
 
+const sendInitialQuickReplie = (senderId, text) => {
+    request({
+        url: 'https://graph.facebook.com/v2.6/me/messages',
+        qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+        method: 'POST',
+        json: {
+            recipient: { id: senderId },
+            message: {
+                text: text,
+                quick_replies: [
+                    {
+                        content_type: "text",
+                        title: "Ver Ofertas",
+                        payload: "<POSTBACK_PAYLOAD>",
+                    },
+                    {
+                        content_type: "text",
+                        title: "Nada. Gracias!",
+                        payload: "<POSTBACK_PAYLOAD>"
+                    }
+                ]
+            }
+        }
+    }, function (error, response, body) {
+        if (error) {
+            console.log('Error sending messages: ', error)
+        } else if (response.body.error) {
+            console.log('Error: ', response.body.error)
+        }
+    });
+}
+
+const sendCategoryQuickReplie = (senderId, text) => {
+    request({
+        url: 'https://graph.facebook.com/v2.6/me/messages',
+        qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+        method: 'POST',
+        json: {
+            recipient: { id: senderId },
+            message: {
+                text: text,
+                quick_replies: [
+                    {
+                        content_type: "text",
+                        title: "Moda",
+                        payload: "<POSTBACK_PAYLOAD>",
+                    },
+                    {
+                        content_type: "text",
+                        title: "Tecnologia",
+                        payload: "<POSTBACK_PAYLOAD>"
+                    }
+                ]
+            }
+        }
+    }, function (error, response, body) {
+        if (error) {
+            console.log('Error sending messages: ', error)
+        } else if (response.body.error) {
+            console.log('Error: ', response.body.error)
+        }
+    });
+}
+
+const sendResponse = (senderId, response) => {
+    console.log('-------------------------------------------------------------');
+    console.log('-------------------------RESPONSE----------------------------');
+    console.log('-------------------------------------------------------------');
+    console.log(response);
+    console.log('-------------------------------------------------------------');
+    console.log('-------------------------SEND RESPONSE-----------------------');
+    if (response.result.metadata['intentName'] === 'Default Welcome Intent') {
+        sendBotIsTyping(senderId, 'typing_on').then((res) => {
+            fireDB.getUsers().then((res) => {
+                console.log(res);
+            });
+            const initialPhrase = 'Me puedes pedir estas cosas: \n - Ver ofertas';
+            sendTextMessage(senderId, { text: initialPhrase }).then((res) => {
+                const phrase = '¿Qué quieres hacer?';
+                sendInitialQuickReplie(senderId, phrase);
+            });
+        });
+    }
+
+    if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Offers') {
+        sendBotIsTyping(senderId, 'typing_on').then((res) => {
+            fireDB.getUsers().then((res) => {
+                console.log(res);
+            });
+            const phrase = 'Tengo las ofertas clasificadas por categorias. Selecciona una xfi 🤙:';
+            sendCategoryQuickReplie(senderId, phrase);
+        });
+    }
+}
+
 module.exports = (event) => {
     const senderId = event.sender.id;
     const message = event.message.text;
     console.log('------------------------------------------------------------');
     console.log('-------------------------REQUEST----------------------------');
+    console.log('------------------------------------------------------------');
     console.log(message);
+    console.log('------------------------------------------------------------');
 
     const apiaiSession = apiAiClient.textRequest(message, { sessionId: 'sizlesbotics_bot' });
     apiaiSession.on('response', (response) => {
         if (response !== null && response !== '') {
-            console.log('------------------------------------------------------------');
-            console.log('-------------------------RESPONSE----------------------------');
-            console.log(response);
-
-            const resultFromDialogflow = response.result.fulfillment.speech;
+            resultFromDialogflow = response.result.fulfillment.speech;
             console.log(resultFromDialogflow);
 
-            if (response.result.metadata['intentName'] === 'Default Welcome Intent') {
-                sendBotIsTyping(senderId, 'typing_on').then((res) => {
-                    sendTextMessage(senderId, { text: resultFromDialogflow }).then((res) => {
-                        fireDB.getUsers().then((res) => {
-                            console.log(res);
-                        });
-                        const phrase = 'Esto es lo que puedo hacer:';
-                        sendQuickReplie(senderId, phrase);
-                    })
+            sendBotIsTyping(senderId, 'typing_on').then((res) => {
+                sendTextMessage(senderId, { text: resultFromDialogflow }).then((res) => {
+                    sendResponse(senderId, response);
                 });
-            }
+            });
         }
     });
+
     apiaiSession.on('error', error => console.log(error));
     apiaiSession.end();
 };
