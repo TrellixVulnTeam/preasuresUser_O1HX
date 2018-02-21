@@ -1,4 +1,4 @@
-const API_AI_TOKEN = 'cc7dceb2a6b74ca2ac0d0e0dc42374f3';
+const API_AI_TOKEN = 'd14a9785b2c947dea91b82a4742679d5';
 const apiAiClient = require('apiai')(API_AI_TOKEN);
 const FACEBOOK_ACCESS_TOKEN = 'EAAE30GqzORwBADyFcSJKHu09c3uLTRmmJ8ic4J2Cicz16Jij3wFmPtKZBY0lR28uZCYyYfg6MBOjSb8FZC6EuOLUPk5MGRUAB4tpwV8f0BgAn3vr5t4Tl8iSSbFIgmJfZASdKWjZC0vZBdzgnguseP6mjHpPAd3lwPHNRSkGvgAAZDZD';
 const request = require('request');
