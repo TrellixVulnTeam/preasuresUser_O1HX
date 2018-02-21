@@ -12,51 +12,73 @@ console.log('************************************************************');
 console.log('**********************INIT FIREBASE*************************');
 console.log('************************************************************');
 module.exports = {
-    getMovies: function () {
+    getMovies: function (numMovies) {
         return new Promise((resolve, reject) => {
             const docRef = db.collection('movies');
-            docRef.get().then((snapshot) => {
+            /*
+            console.log('No documents');
+            this.getMoviesFromApiAndParseToFirebase().then((resMovies, error) => {
+                if (resMovies !== undefined && resMovies !== null && resMovies.length > 0) {
+                    resolve(resMovies);
+                }
+                reject(error);
+            })
+            */
+            docRef.orderBy('title').startAfter(numMovies).limit(10).get().then((snapshot) => {
+                var docsFound = [];
                 snapshot.forEach((doc) => {
-                    if (!doc.exists) {
-                        console.log('No doc');
-                        reject('No doc');
-                    } else {
-                        resolve(doc.data());
-                    }
-                })
+                    var json = {
+                        title: "",
+                        image_url: "",
+                        subtitle: ""
+                    };
+                    const data = doc.data();
+
+                    json.title = data.title;
+                    json.image_url = data.image_url;
+                    json.subtitle = data.link;
+
+                    docsFound.push(json);
+                });
+                const jsonFormatted = JSON.stringify(docsFound);
+                resolve(jsonFormatted);
             }).catch((err) => {
                 console.log('Error to get document: ' + err);
                 reject(err);
             });
+
         });
     },
 
     getMoviesFromApiAndParseToFirebase: function () {
+        console.log('-----------------------getMoviesFromApiAndParseToFirebase--------------------------------');
         return new Promise((resolve, reject) => {
             var options = {
                 url: 'https://sizleapimovies.herokuapp.com'
             };
             request(options, (error, response, body) => {
                 if (!error && response.statusCode === 200) {
+                    var promisesArr = [];
                     var moviesFound = JSON.parse(body);
-
-                    resolve(moviesFound);
-                    /*
                     const docRef = db.collection('movies');
-                    docRef.get().then((snapshot) => {
-                        snapshot.forEach((doc) => {
-                            if (!doc.exists) {
-                                console.log('No doc');
-                                reject('No doc');
-                            } else {
-                                resolve(doc.data());
-                            }
-                        })
-                    }).catch((err) => {
-                        console.log('Error to get document: ' + err);
-                        reject(err);
-                    });
-                    */
+                    if (moviesFound.length > 0) {
+                        moviesFound.forEach((movie) => {
+                            var newPromise = docRef.add(movie);
+                            promisesArr.push(newPromise);
+                        });
+                    }
+
+                    if (promisesArr.length > 0) {
+                        Promise.all(promisesArr).then((res) => {
+                            console.log('All movies added!!!!');
+                            resolve(moviesFound);
+                        }).catch((err) => {
+                            reject(err);
+                        });
+                    } else {
+                        reject(true);
+                    }
+
                 } else {
                     reject(error);
                 }
