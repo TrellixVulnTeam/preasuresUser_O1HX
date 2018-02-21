@@ -1,0 +1,25 @@
+{
+  "name": "pleasuresuser",
+  "version": "1.0.0",
+  "description": "Chatbot application that can recommend to user many products based of your preasures",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NachoSizle/preasuresUser.git"
+  },
+  "keywords": [
+    "NodeJS",
+    "JavaScript",
+    "Chatbot"
+  ],
+  "author": "NachoSizle",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NachoSizle/preasuresUser/issues"
+  },
+  "homepage": "https://github.com/NachoSizle/preasuresUser#readme"
+}
