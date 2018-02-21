@@ -4,6 +4,8 @@ const FACEBOOK_ACCESS_TOKEN = 'EAAE30GqzORwBADyFcSJKHu09c3uLTRmmJ8ic4J2Cicz16Jij
 const request = require('request');
 const moment = require('moment');
 
+const fireDB = require('./../controllers/firebaseController');
+
 const sendBotIsTyping = (senderId, type) => {
     return new Promise((resolve, reject) => {
         request({
@@ -102,6 +104,9 @@ module.exports = (event) => {
             if (response.result.metadata['intentName'] === 'Default Welcome Intent') {
                 sendBotIsTyping(senderId, 'typing_on').then((res) => {
                     sendTextMessage(senderId, { text: resultFromDialogflow }).then((res) => {
+                        fireDB.getUsers().then((res) => {
+                            console.log(res);
+                        });
                         const phrase = 'Esto es lo que puedo hacer:';
                         sendQuickReplie(senderId, phrase);
                     })
