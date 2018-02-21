@@ -103,6 +103,11 @@ const sendInitialQuickReplie = (senderId, text) => {
                     },
                     {
                         content_type: "text",
+                        title: "Ver Peliculas",
+                        payload: "<POSTBACK_PAYLOAD>",
+                    },
+                    {
+                        content_type: "text",
                         title: "Nada. Gracias!",
                         payload: "<POSTBACK_PAYLOAD>"
                     }
@@ -158,6 +163,7 @@ const sendResponse = (senderId, response) => {
     console.log('-------------------------------------------------------------');
     console.log('-------------------------SEND RESPONSE-----------------------');
     if (response.result.metadata['intentName'] === 'Default Welcome Intent') {
+        console.log("WELCOME");
         sendBotIsTyping(senderId, 'typing_on').then((res) => {
             fireDB.getUsers().then((res) => {
                 console.log(res);
@@ -176,6 +182,16 @@ const sendResponse = (senderId, response) => {
                 console.log(res);
             });
             const phrase = 'Tengo las ofertas clasificadas por categorias. Selecciona una xfi 🤙:';
+            sendCategoryQuickReplie(senderId, phrase);
+        });
+    }
+
+    if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies') {
+        sendBotIsTyping(senderId, 'typing_on').then((res) => {
+            fireDB.getMovies().then((res) => {
+                console.log(res);
+            });
+            const phrase = 'Tengo las peliculas clasificadas por categorias. Selecciona una xfi 🤙:';
             sendCategoryQuickReplie(senderId, phrase);
         });
     }
