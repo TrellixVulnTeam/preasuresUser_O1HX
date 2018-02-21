@@ -1,7 +1,7 @@
 module.exports = (req, res) => {
     const hubChallenge = req.query['hub.challenge'];
     const hubMode = req.query['hub.mode'];
-    const verifyTokenMatches = (req.query['hub.verify_token'] === 'sizlebotsics');
+    const verifyTokenMatches = (req.query['hub.verify_token'] === 'preasurebotverify');
     if (hubMode && verifyTokenMatches) {
         res.status(200).send(hubChallenge);
     } else {
