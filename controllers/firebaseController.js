@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const request = require("request");
+const fs = require('fs');
 var serviceAccount = require("./../preasures-bot-firebase-adminsdk-1lkmb-90a46c2444.json");
 
 admin.initializeApp({
@@ -15,16 +16,7 @@ module.exports = {
     getMovies: function (numMovies) {
         return new Promise((resolve, reject) => {
             const docRef = db.collection('movies');
-            /*
-            console.log('No documents');
-            this.getMoviesFromApiAndParseToFirebase().then((resMovies, error) => {
-                if (resMovies !== undefined && resMovies !== null && resMovies.length > 0) {
-                    resolve(resMovies);
-                }
-                reject(error);
-            })
-            */
-            docRef.orderBy('title').startAfter(numMovies).limit(10).get().then((snapshot) => {
+            docRef.orderBy('score', 'desc').limit(10).get().then((snapshot) => {
                 var docsFound = [];
                 snapshot.forEach((doc) => {
                     var json = {
@@ -46,6 +38,14 @@ module.exports = {
                 console.log('Error to get document: ' + err);
                 reject(err);
             });
+            /*
+            this.getMoviesFromApiAndParseToFirebase().then((resMovies, error) => {
+                if (resMovies !== undefined && resMovies !== null && resMovies.length > 0) {
+                    resolve(resMovies);
+                }
+                reject(error);
+            })
+            */
 
         });
     },
@@ -59,6 +59,13 @@ module.exports = {
             request(options, (error, response, body) => {
                 if (!error && response.statusCode === 200) {
                     var promisesArr = [];
+                    fs.writeFile("bbddPordede.json", body, function (err) {
+                        if (err) {
+                            return console.log(err);
+                        }
+
+                        console.log("The file was saved!");
+                    });
                     var moviesFound = JSON.parse(body);
                     const docRef = db.collection('movies');
                     if (moviesFound.length > 0) {
@@ -78,7 +85,6 @@ module.exports = {
                     } else {
                         reject(true);
                     }
-
                 } else {
                     reject(error);
                 }

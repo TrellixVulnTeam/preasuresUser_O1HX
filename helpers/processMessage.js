@@ -13,10 +13,14 @@ const sendBotIsTyping = (senderId, type) => {
     return new Promise((resolve, reject) => {
         request({
             url: 'https://graph.facebook.com/v2.6/me/messages',
-            qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+            qs: {
+                access_token: FACEBOOK_ACCESS_TOKEN
+            },
             method: 'POST',
             json: {
-                recipient: { id: senderId },
+                recipient: {
+                    id: senderId
+                },
                 sender_action: type
             }
         }, function (error, response, body) {
@@ -36,10 +40,14 @@ const sendMovieTemplate = (senderId, elements) => {
     return new Promise((resolve, reject) => {
         request({
             url: 'https://graph.facebook.com/v2.6/me/messages',
-            qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+            qs: {
+                access_token: FACEBOOK_ACCESS_TOKEN
+            },
             method: 'POST',
             json: {
-                recipient: { id: senderId },
+                recipient: {
+                    id: senderId
+                },
                 message: {
                     attachment: {
                         type: 'template',
@@ -67,10 +75,14 @@ const sendTextMessage = (senderId, text) => {
     return new Promise((resolve, reject) => {
         request({
             url: 'https://graph.facebook.com/v2.6/me/messages',
-            qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+            qs: {
+                access_token: FACEBOOK_ACCESS_TOKEN
+            },
             method: 'POST',
             json: {
-                recipient: { id: senderId },
+                recipient: {
+                    id: senderId
+                },
                 message: text,
             }
         }, function (error, response, body) {
@@ -89,14 +101,17 @@ const sendTextMessage = (senderId, text) => {
 const sendQuickReplie = (senderId, text) => {
     request({
         url: 'https://graph.facebook.com/v2.6/me/messages',
-        qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+        qs: {
+            access_token: FACEBOOK_ACCESS_TOKEN
+        },
         method: 'POST',
         json: {
-            recipient: { id: senderId },
+            recipient: {
+                id: senderId
+            },
             message: {
                 text: text,
-                quick_replies: [
-                    {
+                quick_replies: [{
                         content_type: "text",
                         title: "Si",
                         payload: "<POSTBACK_PAYLOAD>",
@@ -121,14 +136,17 @@ const sendQuickReplie = (senderId, text) => {
 const sendInitialQuickReplie = (senderId, text) => {
     request({
         url: 'https://graph.facebook.com/v2.6/me/messages',
-        qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+        qs: {
+            access_token: FACEBOOK_ACCESS_TOKEN
+        },
         method: 'POST',
         json: {
-            recipient: { id: senderId },
+            recipient: {
+                id: senderId
+            },
             message: {
                 text: text,
-                quick_replies: [
-                    {
+                quick_replies: [{
                         content_type: "text",
                         title: "Ver Ofertas",
                         payload: "<POSTBACK_PAYLOAD>",
@@ -158,14 +176,17 @@ const sendInitialQuickReplie = (senderId, text) => {
 const sendCategoryQuickReplie = (senderId, text) => {
     request({
         url: 'https://graph.facebook.com/v2.6/me/messages',
-        qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+        qs: {
+            access_token: FACEBOOK_ACCESS_TOKEN
+        },
         method: 'POST',
         json: {
-            recipient: { id: senderId },
+            recipient: {
+                id: senderId
+            },
             message: {
                 text: text,
-                quick_replies: [
-                    {
+                quick_replies: [{
                         content_type: "text",
                         title: "Moda",
                         payload: "<POSTBACK_PAYLOAD>",
@@ -190,16 +211,24 @@ const sendCategoryQuickReplie = (senderId, text) => {
 const sendShowMoreMoviesQuickReplie = (senderId, text) => {
     request({
         url: 'https://graph.facebook.com/v2.6/me/messages',
-        qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+        qs: {
+            access_token: FACEBOOK_ACCESS_TOKEN
+        },
         method: 'POST',
         json: {
-            recipient: { id: senderId },
+            recipient: {
+                id: senderId
+            },
             message: {
                 text: text,
-                quick_replies: [
+                quick_replies: [{
+                        content_type: "text",
+                        title: "Mostrar peliculas",
+                        payload: "<POSTBACK_PAYLOAD>",
+                    },
                     {
                         content_type: "text",
-                        title: "Si, porfavor!",
+                        title: "Buscar...",
                         payload: "<POSTBACK_PAYLOAD>",
                     },
                     {
@@ -228,16 +257,7 @@ const sendResponse = (senderId, response) => {
     console.log('-------------------------SEND RESPONSE-----------------------');
     if (response.result.metadata['intentName'] === 'Default Welcome Intent') {
         console.log("WELCOME");
-        sendBotIsTyping(senderId, 'typing_on').then((res) => {
-            fireDB.getUsers().then((res) => {
-                console.log(res);
-            });
-            const initialPhrase = 'Me puedes pedir estas cosas: \n - Ver ofertas \n - Ver Peliculas';
-            sendTextMessage(senderId, { text: initialPhrase }).then((res) => {
-                const phrase = '¿Qué quieres hacer?';
-                sendInitialQuickReplie(senderId, phrase);
-            });
-        });
+        sendInitialResponse(senderId);
     }
 
     if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Offers') {
@@ -250,18 +270,59 @@ const sendResponse = (senderId, response) => {
     if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies') {
         sendBotIsTyping(senderId, 'typing_on').then((res) => {
             console.log('***********************GET MOVIES************************')
-            fireDB.getMovies(numMovies).then((resMovies) => {
-                var resultParsered = JSON.stringify(resMovies);
-                sendMovieTemplate(senderId, resMovies).then((res) => {
-                    const phrase = 'Tengo mas peliculas! ¿Quieres que te enseñe cuales? 😏:';
-                    sendShowMoreMoviesQuickReplie(senderId, phrase);
-                })
-            });
+            const phrase = 'Tengo muchas peliculas! ¿Quieres que te las enseñe? 😏 \n O si prefieres, selecciona una opcion:';
+            sendShowMoreMoviesQuickReplie(senderId, phrase);
             /*
             const phrase = 'Tengo las peliculas clasificadas por categorias. Selecciona una xfi 🤙:';
             sendCategoryQuickReplie(senderId, phrase);
             */
         });
+    }
+
+    if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies - Show Movies') {
+        fireDB.getMovies(numMovies).then((resMovies) => {
+            var resultParsered = JSON.stringify(resMovies);
+            sendMovieTemplate(senderId, resMovies).then((res) => {
+                const phrase = 'Tengo mas peliculas! ¿Quieres que te enseñe cuales? 😏 \n O si prefieres, selecciona una opcion:';
+                sendShowMoreMoviesQuickReplie(senderId, phrase);
+            })
+        }).catch((err) => {
+            sendBotIsTyping(senderId, 'typing_on').then((res) => {
+                const phrase = 'Vaya, hay un fallo en las tripas del server 😔';
+                sendTextMessage(senderId, {
+                    text: phrase
+                }).then((res) => {
+                    sendInitialResponse(senderId);
+                });
+            });
+        });
+    }
+
+    if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies - Find Movie - Name Movie') {
+        console.log(response);
+        sendTextMessage(senderId, {
+            text: resultFromDialogflow
+        }).then((res) => {
+            sendInitialResponse(senderId);
+        });
+        /*
+        //FIND MOVIE IN DB
+        fireDB.getMovies(numMovies).then((resMovies) => {
+            var resultParsered = JSON.stringify(resMovies);
+            sendOneMovieTemplate(senderId, resMovies).then((res) => {
+                const phrase = 'Aquí la tienes ';
+            })
+        }).catch((err) => {
+            sendBotIsTyping(senderId, 'typing_on').then((res) => {
+                const phrase = 'Vaya, hay un fallo en las tripas del server 😔';
+                sendTextMessage(senderId, {
+                    text: phrase
+                }).then((res) => {
+                    sendInitialResponse(senderId);
+                });
+            });
+        });
+        */
     }
 
     if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies - yes') {
@@ -270,6 +331,27 @@ const sendResponse = (senderId, response) => {
             sendShowMoreMoviesQuickReplie(senderId, phrase);
         });
     }
+
+    if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies - no') {
+        sendBotIsTyping(senderId, 'typing_on').then((res) => {
+            sendInitialResponse(senderId);
+        });
+    }
+}
+
+const sendInitialResponse = (senderId) => {
+    sendBotIsTyping(senderId, 'typing_on').then((res) => {
+        fireDB.getUsers().then((res) => {
+            console.log(res);
+        });
+        const initialPhrase = 'Me puedes pedir estas cosas: \n - Ver ofertas \n - Ver Peliculas';
+        sendTextMessage(senderId, {
+            text: initialPhrase
+        }).then((res) => {
+            const phrase = '¿Qué quieres hacer?';
+            sendInitialQuickReplie(senderId, phrase);
+        });
+    });
 }
 
 module.exports = (event) => {
@@ -281,14 +363,18 @@ module.exports = (event) => {
     console.log(message);
     console.log('------------------------------------------------------------');
 
-    const apiaiSession = apiAiClient.textRequest(message, { sessionId: 'sizlesbotics_bot' });
+    const apiaiSession = apiAiClient.textRequest(message, {
+        sessionId: 'sizlesbotics_bot'
+    });
     apiaiSession.on('response', (response) => {
         if (response !== null && response !== '') {
             resultFromDialogflow = response.result.fulfillment.speech;
             console.log(resultFromDialogflow);
 
             sendBotIsTyping(senderId, 'typing_on').then((res) => {
-                sendTextMessage(senderId, { text: resultFromDialogflow }).then((res) => {
+                sendTextMessage(senderId, {
+                    text: resultFromDialogflow
+                }).then((res) => {
                     sendResponse(senderId, response);
                 });
             });
