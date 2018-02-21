@@ -97,10 +97,12 @@ module.exports = (event) => {
 
             const resultFromDialogflow = response.result.fulfillment.speech;
             console.log(resultFromDialogflow);
-            sendBotIsTyping(senderId, 'typing_on').then((res) => {
-                sendTextMessage(senderId, { text: resultFromDialogflow });
-                //sendTextMessage(senderId, { text: 'Si quieres volver a hacer una peticion, escribe o vuelve a saludarme. 😝' });
-            });
+
+            if (response.result.metadata['intentName'] === 'Default Welcome Intent') {
+                sendBotIsTyping(senderId, 'typing_on').then((res) => {
+                    sendTextMessage(senderId, { text: resultFromDialogflow });
+                });
+            }
         }
     });
     apiaiSession.on('error', error => console.log(error));
