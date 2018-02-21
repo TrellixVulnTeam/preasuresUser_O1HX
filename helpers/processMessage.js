@@ -1,6 +1,6 @@
 const API_AI_TOKEN = 'cc7dceb2a6b74ca2ac0d0e0dc42374f3';
 const apiAiClient = require('apiai')(API_AI_TOKEN);
-const FACEBOOK_ACCESS_TOKEN = 'EAACmQIVgxGMBAB1G7i82xULBrliyZAtIqkp7UXpiZBcSAhOCWiprJUrWiKzSpozWwZCLaueEIXQyDJ3J3KbmcBBu4XIkZBSV7qUls77pwaLajtLZA6Huh0aAtpNi4ZB6sWt997mLeS7tkkAt9KY1WyALymef6gBvg5frgbJPsJ8AZDZD';
+const FACEBOOK_ACCESS_TOKEN = 'EAAE30GqzORwBADyFcSJKHu09c3uLTRmmJ8ic4J2Cicz16Jij3wFmPtKZBY0lR28uZCYyYfg6MBOjSb8FZC6EuOLUPk5MGRUAB4tpwV8f0BgAn3vr5t4Tl8iSSbFIgmJfZASdKWjZC0vZBdzgnguseP6mjHpPAd3lwPHNRSkGvgAAZDZD';
 const request = require('request');
 const moment = require('moment');
 
