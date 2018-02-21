@@ -88,6 +88,7 @@ module.exports = (event) => {
     console.log('------------------------------------------------------------');
     console.log('-------------------------REQUEST----------------------------');
     console.log(message);
+
     const apiaiSession = apiAiClient.textRequest(message, { sessionId: 'sizlesbotics_bot' });
     apiaiSession.on('response', (response) => {
         if (response !== null && response !== '') {
@@ -100,7 +101,10 @@ module.exports = (event) => {
 
             if (response.result.metadata['intentName'] === 'Default Welcome Intent') {
                 sendBotIsTyping(senderId, 'typing_on').then((res) => {
-                    sendTextMessage(senderId, { text: resultFromDialogflow });
+                    sendTextMessage(senderId, { text: resultFromDialogflow }).then((res) => {
+                        const phrase = 'Esto es lo que puedo hacer:';
+                        sendQuickReplie(senderId, phrase);
+                    })
                 });
             }
         }
