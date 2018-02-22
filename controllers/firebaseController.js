@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const request = require("request");
+const fs = require('fs');
 var serviceAccount = require("./../preasures-bot-firebase-adminsdk-1lkmb-90a46c2444.json");
 
 admin.initializeApp({
@@ -12,21 +13,29 @@ console.log('************************************************************');
 console.log('**********************INIT FIREBASE*************************');
 console.log('************************************************************');
 module.exports = {
-    getMovies: function (numMovies) {
+    getMovies: function (numMovies, filters) {
         return new Promise((resolve, reject) => {
+            if (filters.category === "") {
+                filters.category = 'score'
+            }
+            if (filters.mode === "") {
+                filters.mode = 'desc'
+            } else if (filters.category === "asc") {
+                filters.category = ''
+            }
+
+            console.log('************************************************************');
+            console.log('**********************SEARCH MOVIES*************************');
+            console.log('************************************************************');
+            console.log(filters);
+            console.log('************************************************************');
+
             const docRef = db.collection('movies');
-            /*
-            console.log('No documents');
-            this.getMoviesFromApiAndParseToFirebase().then((resMovies, error) => {
-                if (resMovies !== undefined && resMovies !== null && resMovies.length > 0) {
-                    resolve(resMovies);
-                }
-                reject(error);
-            })
-            */
-            docRef.orderBy('title').startAfter(numMovies).limit(10).get().then((snapshot) => {
+            docRef.orderBy(filters.category, filters.mode).limit(10).get().then((snapshot) => {
+                console.log(snapshot);
                 var docsFound = [];
                 snapshot.forEach((doc) => {
+                    console.log(doc);
                     var json = {
                         title: "",
                         image_url: "",
@@ -47,6 +56,15 @@ module.exports = {
                 reject(err);
             });
 
+            /*
+            this.getMoviesFromApiAndParseToFirebase().then((resMovies, error) => {
+                if (resMovies !== undefined && resMovies !== null && resMovies.length > 0) {
+                    resolve(resMovies);
+                }
+                reject(error);
+            })
+            */
+
         });
     },
 
@@ -59,6 +77,13 @@ module.exports = {
             request(options, (error, response, body) => {
                 if (!error && response.statusCode === 200) {
                     var promisesArr = [];
+                    fs.writeFile("bbddPordede.json", body, function (err) {
+                        if (err) {
+                            return console.log(err);
+                        }
+
+                        console.log("The file was saved!");
+                    });
                     var moviesFound = JSON.parse(body);
                     const docRef = db.collection('movies');
                     if (moviesFound.length > 0) {
@@ -78,7 +103,6 @@ module.exports = {
                     } else {
                         reject(true);
                     }
-
                 } else {
                     reject(error);
                 }
