@@ -13,12 +13,29 @@ console.log('************************************************************');
 console.log('**********************INIT FIREBASE*************************');
 console.log('************************************************************');
 module.exports = {
-    getMovies: function (numMovies) {
+    getMovies: function (numMovies, filters) {
         return new Promise((resolve, reject) => {
+            if (filters.category === "") {
+                filters.category = 'score'
+            }
+            if (filters.mode === "") {
+                filters.mode = 'desc'
+            } else if (filters.category === "asc") {
+                filters.category = ''
+            }
+
+            console.log('************************************************************');
+            console.log('**********************SEARCH MOVIES*************************');
+            console.log('************************************************************');
+            console.log(filters);
+            console.log('************************************************************');
+
             const docRef = db.collection('movies');
-            docRef.orderBy('score', 'desc').limit(10).get().then((snapshot) => {
+            docRef.orderBy(filters.category, filters.mode).limit(10).get().then((snapshot) => {
+                console.log(snapshot);
                 var docsFound = [];
                 snapshot.forEach((doc) => {
+                    console.log(doc);
                     var json = {
                         title: "",
                         image_url: "",
@@ -38,6 +55,7 @@ module.exports = {
                 console.log('Error to get document: ' + err);
                 reject(err);
             });
+
             /*
             this.getMoviesFromApiAndParseToFirebase().then((resMovies, error) => {
                 if (resMovies !== undefined && resMovies !== null && resMovies.length > 0) {
