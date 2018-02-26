@@ -8,6 +8,7 @@ const fireDB = require('./../controllers/firebaseController');
 
 var resultFromDialogflow = '';
 var numMovies = 0;
+var contextFindMovieByName = false;
 
 const sendBotIsTyping = (senderId, type) => {
     return new Promise((resolve, reject) => {
@@ -233,12 +234,12 @@ const sendFilterMoviesQuickReplie = (senderId, text) => {
                     },
                     {
                         content_type: "text",
-                        title: "Mas nuevas",
+                        title: "Mas antiguas",
                         payload: "<POSTBACK_PAYLOAD>"
                     },
                     {
                         content_type: "text",
-                        title: "Menos nuevas",
+                        title: "Menos antiguas",
                         payload: "<POSTBACK_PAYLOAD>"
                     },
                     {
@@ -319,63 +320,92 @@ const sendResponse = (senderId, response) => {
     console.log('-------------------------SEND RESPONSE-----------------------');
     if (response.result.metadata['intentName'] === 'Default Welcome Intent') {
         console.log("WELCOME");
-        sendInitialResponse(senderId);
+        sendTextMessage(senderId, {
+            text: resultFromDialogflow
+        }).then((res) => {
+            sendInitialResponse(senderId);
+        });
     }
 
     if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Offers') {
-        sendBotIsTyping(senderId, 'typing_on').then((res) => {
-            const phrase = 'Tengo las ofertas clasificadas por categorias. Selecciona una xfi 🤙:';
-            sendCategoryQuickReplie(senderId, phrase);
+
+        sendTextMessage(senderId, {
+            text: resultFromDialogflow
+        }).then((res) => {
+            sendBotIsTyping(senderId, 'typing_on').then((res) => {
+                const phrase = 'Tengo las ofertas clasificadas por categorias. Selecciona una xfi 🤙:';
+                sendCategoryQuickReplie(senderId, phrase);
+            });
         });
     }
 
     if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies') {
-        sendBotIsTyping(senderId, 'typing_on').then((res) => {
-            console.log('***********************GET MOVIES************************')
-            const phrase = 'Tengo muchas peliculas! ¿Quieres que te las enseñe? 😏 \n O si prefieres, selecciona una opcion:';
-            sendShowMoreMoviesQuickReplie(senderId, phrase);
-            /*
-            const phrase = 'Tengo las peliculas clasificadas por categorias. Selecciona una xfi 🤙:';
-            sendCategoryQuickReplie(senderId, phrase);
-            */
+        sendTextMessage(senderId, {
+            text: resultFromDialogflow
+        }).then((res) => {
+            sendBotIsTyping(senderId, 'typing_on').then((res) => {
+                console.log('***********************GET MOVIES************************')
+                const phrase = 'Tengo muchas peliculas! ¿Quieres que te las enseñe? 😏 \n O si prefieres, selecciona una opcion:';
+                sendShowMoreMoviesQuickReplie(senderId, phrase);
+                /*
+                const phrase = 'Tengo las peliculas clasificadas por categorias. Selecciona una xfi 🤙:';
+                sendCategoryQuickReplie(senderId, phrase);
+                */
+            });
         });
     }
 
     if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies - Show Movies') {
-        sendBotIsTyping(senderId, 'typing_on').then((res) => {
-            const phrase = 'Tengo las peliculas clasificadas. Selecciona una xfi 🤙:';
-            sendFilterMoviesQuickReplie(senderId, phrase);
+        sendTextMessage(senderId, {
+            text: resultFromDialogflow
+        }).then((res) => {
+            sendBotIsTyping(senderId, 'typing_on').then((res) => {
+                const phrase = 'Tengo las peliculas clasificadas. Selecciona una xfi 🤙:';
+                sendFilterMoviesQuickReplie(senderId, phrase);
+            });
         });
     }
 
     if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies - Show Movies - By Category') {
-        //Only year and score
-        var filters = {
-            category: "",
-            mode: ""
-        };
+        sendTextMessage(senderId, {
+            text: resultFromDialogflow
+        }).then((res) => {
+            //Only year and score
+            var filters = {
+                category: "",
+                mode: ""
+            };
 
-        if (response.result['parameters']['Categoria'] !== undefined && response.result['parameters']['Categoria'] !== null) {
-            filters.category = response.result['parameters']['Categoria'];
-        } else if (response.result['parameters']['MoreLess'] !== undefined && response.result['parameters']['MoreLess'] !== null) {
-            filters.category = response.result['parameters']['MoreLess'];
-        }
+            if (response.result['parameters']['Categoria'] !== undefined && response.result['parameters']['Categoria'] !== null) {
+                filters.category = response.result['parameters']['Categoria'];
+            }
+            if (response.result['parameters']['MoreLess'] !== undefined && response.result['parameters']['MoreLess'] !== null) {
+                filters.mode = response.result['parameters']['MoreLess'];
+            }
 
-        console.log('*******************GETTING MOVIES*******************');
+            console.log('*******************GETTING MOVIES*******************');
 
-        fireDB.getMovies(numMovies, filters).then((resMovies) => {
-            var resultParsered = JSON.stringify(resMovies);
-            sendMovieTemplate(senderId, resMovies).then((res) => {
-                const phrase = 'Tengo mas peliculas! ¿Quieres que te enseñe cuales? 😏';
-                sendShowMoreMoviesQuickReplie(senderId, phrase);
-            })
-        }).catch((err) => {
-            sendErrorServer(senderId);
+            fireDB.getMovies(numMovies, filters).then((resMovies) => {
+                var resultParsered = JSON.stringify(resMovies);
+                sendMovieTemplate(senderId, resMovies).then((res) => {
+                    const phrase = 'Tengo mas peliculas! ¿Quieres que te enseñe cuales? 😏';
+                    sendShowMoreMoviesQuickReplie(senderId, phrase);
+                })
+            }).catch((err) => {
+                sendErrorServer(senderId, err);
+            });
+        });
+    }
+
+    if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies - Find Movie') {
+        contextFindMovieByName = true;
+        sendTextMessage(senderId, {
+            text: resultFromDialogflow
         });
     }
 
     if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies - Find Movie - Name Movie') {
-        const nameMovie = response.result['parameters']['Pelicula'];
+        const nameMovie = response.result['parameters']['any'];
         sendBotIsTyping(senderId, 'typing_on').then((res) => {
             //FIND MOVIE
             fireDB.getMovieByName(nameMovie).then((resMovie) => {
@@ -386,7 +416,7 @@ const sendResponse = (senderId, response) => {
                     sendLastResponse(senderId);
                 });
             }).catch((err) => {
-                sendErrorServer(senderId);
+                sendErrorServer(senderId, err);
             });
         });
 
@@ -422,15 +452,28 @@ const sendResponse = (senderId, response) => {
             sendLastResponse(senderId);
         });
     }
+
+    if (response.result.metadata['intentName'] === 'Default Fallback Intent') {
+        sendBotIsTyping(senderId, 'typing_on').then((res) => {
+            sendLastResponse(senderId);
+        });
+    }
 }
 
-const sendErrorServer = (senderId) => {
+const sendErrorServer = (senderId, err) => {
     sendBotIsTyping(senderId, 'typing_on').then((res) => {
-        const phrase = 'Vaya, hay un fallo en las tripas del server 😔';
+        var phrase = '';
+
+        if (err !== null) {
+            phrase = 'Vaya, hay un fallo en las tripas del server 😔';
+        } else {
+            phrase = 'No lo encuentro 😖';
+        };
+
         sendTextMessage(senderId, {
             text: phrase
         }).then((res) => {
-            sendInitialResponse(senderId);
+            sendLastResponse(senderId);
         });
     });
 }
@@ -446,7 +489,13 @@ const sendLastResponse = (senderId) => {
 
 module.exports = (event) => {
     const senderId = event.sender.id;
-    const message = event.message.text;
+    var message = event.message.text;
+
+    if (contextFindMovieByName) {
+        var aux = message.replace(' ', '-');
+        message = 'Buscar ' + aux;
+    }
+
     console.log('------------------------------------------------------------');
     console.log('-------------------------REQUEST----------------------------');
     console.log('------------------------------------------------------------');
@@ -456,17 +505,15 @@ module.exports = (event) => {
     const apiaiSession = apiAiClient.textRequest(message, {
         sessionId: 'sizlesbotics_bot'
     });
+
     apiaiSession.on('response', (response) => {
+        contextFindMovieByName = false;
         if (response !== null && response !== '') {
             resultFromDialogflow = response.result.fulfillment.speech;
             console.log(resultFromDialogflow);
 
             sendBotIsTyping(senderId, 'typing_on').then((res) => {
-                sendTextMessage(senderId, {
-                    text: resultFromDialogflow
-                }).then((res) => {
-                    sendResponse(senderId, response);
-                });
+                sendResponse(senderId, response);
             });
         }
     });

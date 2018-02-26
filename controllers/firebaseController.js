@@ -18,12 +18,6 @@ module.exports = {
             if (filters.category === "") {
                 filters.category = 'score'
             }
-            if (filters.mode === "") {
-                filters.mode = 'desc'
-            } else if (filters.category === "asc") {
-                filters.category = ''
-            }
-
             console.log('************************************************************');
             console.log('**********************SEARCH MOVIES*************************');
             console.log('************************************************************');
@@ -32,7 +26,6 @@ module.exports = {
 
             const docRef = db.collection('movies');
             docRef.orderBy(filters.category, filters.mode).limit(10).get().then((snapshot) => {
-                console.log(snapshot);
                 var docsFound = [];
                 snapshot.forEach((doc) => {
                     console.log(doc);
@@ -71,7 +64,8 @@ module.exports = {
     getMovieByName: function (nameMovie) {
         return new Promise((resolve, reject) => {
             const docRef = db.collection('movies');
-            docRef.where('title', '==', nameMovie).get().then((snapshot) => {
+            console.log('Name movie: ' + nameMovie);
+            docRef.where('title', '>=', nameMovie).get().then((snapshot) => {
                 snapshot.forEach((doc) => {
                     if (!doc.exists) {
                         console.log('No doc');
@@ -83,12 +77,15 @@ module.exports = {
                             subtitle: ""
                         };
                         const movieFound = doc.data();
-                        json.title = movieFound.title;
-                        json.image_url = movieFound.image_url;
-                        json.subtitle = movieFound.link;
-                        resolve(json);
+                        if (movieFound.title === nameMovie) {
+                            json.title = movieFound.title;
+                            json.image_url = movieFound.image_url;
+                            json.subtitle = movieFound.link;
+                            resolve(json);
+                        }
                     }
-                })
+                });
+                reject(null);
             }).catch((err) => {
                 console.log('Error to get document: ' + err);
                 reject(err);
