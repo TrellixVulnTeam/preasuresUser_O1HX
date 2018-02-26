@@ -370,32 +370,23 @@ const sendResponse = (senderId, response) => {
                 sendShowMoreMoviesQuickReplie(senderId, phrase);
             })
         }).catch((err) => {
-            sendBotIsTyping(senderId, 'typing_on').then((res) => {
-                const phrase = 'Vaya, hay un fallo en las tripas del server 😔';
-                sendTextMessage(senderId, {
-                    text: phrase
-                }).then((res) => {
-                    sendInitialResponse(senderId);
-                });
-            });
+            sendErrorServer(senderId);
         });
     }
 
     if (response.result.metadata['intentName'] === 'Default Welcome Intent - Show Movies - Find Movie - Name Movie') {
-        console.log('*******************NAME MOVIE*******************');
-        console.log(response);
-
         const nameMovie = response.result['parameters']['Pelicula'];
         sendBotIsTyping(senderId, 'typing_on').then((res) => {
             //FIND MOVIE
-            sendMovieTemplate(senderId, {
-                text: {
-                    title: nameMovie,
-                    subtitle: "https://www.plusdede.com/peli/deadpool",
-                    image_url: "https://cdn0.plusdede.com/cdn/media/peli/5/7/9/3/4-medium.jpg?v=0"
-                }
-            }).then((res) => {
-                sendLastResponse(senderId);
+            fireDB.getMovieByName(nameMovie).then((resMovie) => {
+                var resultParsered = JSON.stringify(resMovie);
+                sendMovieTemplate(senderId, {
+                    text: resultParsered
+                }).then((res) => {
+                    sendLastResponse(senderId);
+                });
+            }).catch((err) => {
+                sendErrorServer(senderId);
             });
         });
 
@@ -431,6 +422,17 @@ const sendResponse = (senderId, response) => {
             sendLastResponse(senderId);
         });
     }
+}
+
+const sendErrorServer = (senderId) => {
+    sendBotIsTyping(senderId, 'typing_on').then((res) => {
+        const phrase = 'Vaya, hay un fallo en las tripas del server 😔';
+        sendTextMessage(senderId, {
+            text: phrase
+        }).then((res) => {
+            sendInitialResponse(senderId);
+        });
+    });
 }
 
 const sendLastResponse = (senderId) => {

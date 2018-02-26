@@ -68,6 +68,34 @@ module.exports = {
         });
     },
 
+    getMovieByName: function (nameMovie) {
+        return new Promise((resolve, reject) => {
+            const docRef = db.collection('movies');
+            docRef.where('title', '==', nameMovie).get().then((snapshot) => {
+                snapshot.forEach((doc) => {
+                    if (!doc.exists) {
+                        console.log('No doc');
+                        reject('No doc');
+                    } else {
+                        var json = {
+                            title: "",
+                            image_url: "",
+                            subtitle: ""
+                        };
+                        const movieFound = doc.data();
+                        json.title = movieFound.title;
+                        json.image_url = movieFound.image_url;
+                        json.subtitle = movieFound.link;
+                        resolve(json);
+                    }
+                })
+            }).catch((err) => {
+                console.log('Error to get document: ' + err);
+                reject(err);
+            });
+        });
+    },
+
     getMoviesFromApiAndParseToFirebase: function () {
         console.log('-----------------------getMoviesFromApiAndParseToFirebase--------------------------------');
         return new Promise((resolve, reject) => {
